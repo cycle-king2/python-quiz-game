@@ -1,4 +1,3 @@
-cat << 'EOF' > input_utils.py
 def input_int_in_range(prompt: str, min_value: int, max_value: int) -> int:
     while True:
         try:
@@ -28,4 +27,3 @@ def input_non_empty(prompt: str) -> str:
         if text:
             return text
         print("내용을 비워둘 수 없습니다. 다시 입력하세요.")
-EOF
