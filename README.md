@@ -1,4 +1,4 @@
-# python-quiz-game# Python Console Quiz Game
+# Python Console Quiz Game
 
 모듈화 구조와 입력 검증, 상태 저장/복구(`state.json`) 기능을 적용한 콘솔 기반 퀴즈 게임입니다.
 
