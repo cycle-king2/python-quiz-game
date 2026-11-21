@@ -27,5 +27,6 @@ def get_default_quizzes() -> list[Quiz]:
             question="김다미 배우의 키는?",
             choices=["160cm 1", "170cm 2", "172cm 3", "175cm 4"],
             answer=2,
+        
         ),
     ]
