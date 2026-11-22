@@ -8,12 +8,76 @@ from quiz import Quiz
 class QuizGame:
     def __init__(self, state_file: str = "state.json") -> None:
         self.state_path = Path(state_file)
+        self.backup_path = Path(f"{state_file}.bak")
         self.quizzes: list[Quiz] = []
         self.score: int = 0
         self.load_state()
 
+    def _parse_payload(self, data: object) -> tuple[list[Quiz], int]:
+        if not isinstance(data, dict):
+            raise ValueError("상태 데이터 형식이 올바르지 않습니다.")
+
+        raw_quizzes = data.get("quizzes", [])
+        if not isinstance(raw_quizzes, list) or not raw_quizzes:
+            raise ValueError("퀴즈 목록이 비어 있거나 형식이 잘못되었습니다.")
+
+        loaded_quizzes: list[Quiz] = []
+        for item in raw_quizzes:
+            if not isinstance(item, dict):
+                raise ValueError("퀴즈 항목 형식이 올바르지 않습니다.")
+            question = item["question"]
+            choices = item["choices"]
+            answer = item["answer"]
+            if not isinstance(question, str) or not question.strip():
+                raise ValueError("문제 내용이 올바르지 않습니다.")
+            if (
+                not isinstance(choices, list)
+                or len(choices) != 4
+                or not all(isinstance(c, str) and c.strip() for c in choices)
+            ):
+                raise ValueError("보기 목록 형식이 올바르지 않습니다.")
+            if isinstance(answer, bool) or not isinstance(answer, int) or not (1 <= answer <= 4):
+                raise ValueError("정답 번호가 올바르지 않습니다.")
+
+            loaded_quizzes.append(
+                Quiz(
+                    question=question,
+                    choices=choices,
+                    answer=answer,
+                )
+            )
+
+        raw_score = data.get("score", 0)
+        if isinstance(raw_score, bool) or not isinstance(raw_score, int):
+            score = int(raw_score)
+        else:
+            score = raw_score
+
+        return loaded_quizzes, score
+
+    def restore_from_backup(self) -> bool:
+        """백업 파일(state.json.bak)에서 퀴즈와 점수를 복구합니다."""
+        if not self.backup_path.exists():
+            return False
+
+        try:
+            data = json.loads(self.backup_path.read_text(encoding="utf-8"))
+            restored_quizzes, restored_score = self._parse_payload(data)
+            self.quizzes = restored_quizzes
+            self.score = restored_score
+            self.state_path.write_text(
+                json.dumps(data, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            return True
+        except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+            return False
+
     def load_state(self) -> None:
         if not self.state_path.exists():
+            if self.restore_from_backup():
+                print("state.json이 없어 백업 파일(state.json.bak)에서 복구했습니다.")
+                return
             self.quizzes = get_default_quizzes()
             self.score = 0
             self.save_state()
@@ -21,28 +85,15 @@ class QuizGame:
 
         try:
             data = json.loads(self.state_path.read_text(encoding="utf-8"))
-            raw_quizzes = data.get("quizzes", [])
-            loaded_quizzes: list[Quiz] = []
-
-            for item in raw_quizzes:
-                loaded_quizzes.append(
-                    Quiz(
-                        question=item["question"],
-                        choices=item["choices"],
-                        answer=item["answer"],
-                    )
-                )
-
-            if not loaded_quizzes:
-                raise ValueError("퀴즈 목록이 비어 있습니다.")
-
-            self.quizzes = loaded_quizzes
-            self.score = int(data.get("score", 0))
+            self.quizzes, self.score = self._parse_payload(data)
         except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
-            print("저장된 상태 파일이 없거나 손상되어 기본 퀴즈로 복구합니다.")
-            self.quizzes = get_default_quizzes()
-            self.score = 0
-            self.save_state()
+            if self.restore_from_backup():
+                print("손상된 state.json 대신 백업 파일(state.json.bak)에서 복구했습니다.")
+            else:
+                print("저장된 상태 파일이 없거나 손상되어 기본 퀴즈로 복구합니다.")
+                self.quizzes = get_default_quizzes()
+                self.score = 0
+                self.save_state()
 
     def save_state(self) -> None:
         payload = {
@@ -56,10 +107,23 @@ class QuizGame:
                 for q in self.quizzes
             ],
         }
-        self.state_path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+        serialized = json.dumps(payload, ensure_ascii=False, indent=2)
+
+        if self.state_path.exists():
+            try:
+                self.backup_path.write_text(
+                    self.state_path.read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
+            except OSError:
+                pass
+
+        self.state_path.write_text(serialized, encoding="utf-8")
+
+        try:
+            self.backup_path.write_text(serialized, encoding="utf-8")
+        except OSError:
+            pass
 
     def list_quizzes(self) -> None:
         print("\n=== 현재 등록된 퀴즈 목록 ===")
