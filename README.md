@@ -33,7 +33,7 @@ WSL Ubuntu 환경과 Python, VS Code, Git 기반으로 개발 환경을 구성�
 ## 4. 실행 방법 및 실행 결과
 터미널에서 프로젝트 루트(`python-quiz-game`)로 이동한 뒤 아래 명령어로 실행합니다.
 
-~~~bash
+```bash
 python3 main.py
 ~~~
 
