@@ -163,6 +163,8 @@ kimkidong@DESKTOP-MS0C3LR:~/projects/python-quiz-game$ git log --oneline --graph
 
 - **백업/복구 대응 및 향후 개선점:** 현재 손상 시 기본 퀴즈로 복구하는 수준이므로, 추후 .bak 백업 파일 생성이나 수동 복구 메뉴/옵션을 추가하면 사용자 데이터 손실 방지를 더 강화할 수 있음
 
+![백업 및 수동 복구](docs/screenshots/백업%20및%20수동복구%20스크린샷.png)
+
 - **요구사항 변경 시 수정 대상 파일 및 테스트 목록:** 
 가. 문제/선택지/정답 스키마 변경 시: `quiz.py, default_quizzes.py, quiz_game.py` 수정 → 기본 퀴즈 로딩, 퀴즈 추가/목록/풀이 및 `state.json` 저장·복구 테스트
 나. 콘솔 입력 규칙/검증 조건 변경 시: `input_utils.py, main.py` 수정 → 잘못된 메뉴/보기/정답 입력 시 재입력 유도 및 정상 흐름 테스트
