@@ -37,7 +37,7 @@ def main() -> None:
         elif choice == 6:
             if game.restore_from_backup():
                print("백업 파일(.bak)에서 상태를 복구했습니다.")
-        else:
+            else:
             print("복구할 수 있는 유효한 백업 파일(.bak)이 없습니다.")
 
 if __name__ == "__main__":
